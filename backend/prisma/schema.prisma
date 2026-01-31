@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String    // Hardcoded for hackathon demo
+  name      String
+  role      String    // EMPLOYEE or HR
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  complaints Complaint[] @relation("ReportedBy")
+  comments   Comment[]
+}
+
+// Complaint model
+model Complaint {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  isAnonymous     Boolean   @default(false)
+  reportedById    Int
+  reportedBy      User      @relation("ReportedBy", fields: [reportedById], references: [id])
+  status          String    @default("RECEIVED") // RECEIVED, REVIEW, INVESTIGATION, ACTION, CLOSED
+  confidenceScore Float     @default(0.5)        // AI mock score (0-1)
+  currentStep     Int       @default(1)          // 1-5 for workflow steps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  files    File[]
+  comments Comment[]
+  workflow WorkflowStep[]
+}
+
+// File upload model for evidence
+model File {
+  id          Int       @id @default(autoincrement())
+  filename    String
+  filepath    String
+  mimeType    String
+  complaintId Int
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime  @default(now())
+}
+
+// Internal HR comments
+model Comment {
+  id          Int       @id @default(autoincrement())
+  content     String
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+  complaintId Int
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+}
+
+// Workflow step tracking
+model WorkflowStep {
+  id          Int       @id @default(autoincrement())
+  complaintId Int
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  step        String    // RECEIVED, REVIEW, INVESTIGATION, ACTION, CLOSED
+  notes       String    @default("")
+  completedAt DateTime  @default(now())
+
+  @@index([complaintId])
+}
