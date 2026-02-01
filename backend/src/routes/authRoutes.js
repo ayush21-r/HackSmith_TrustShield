@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, getCurrentUser } from '../controllers/authController.js';
+import { login, signup, getCurrentUser } from '../controllers/authController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,6 +10,12 @@ const router = express.Router();
  * Demo credentials: employee@example.com / hr@example.com (password: password123)
  */
 router.post('/login', login);
+
+/**
+ * POST /api/auth/signup
+ * Create new user account
+ */
+router.post('/signup', signup);
 
 /**
  * GET /api/auth/me

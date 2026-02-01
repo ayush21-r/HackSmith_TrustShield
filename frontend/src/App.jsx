@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
+import Signup from './components/Signup';
 import Home from './pages/Home';
 import ReportComplaint from './components/ReportComplaint';
 import ComplaintStatus from './components/ComplaintStatus';
@@ -51,6 +52,7 @@ export default function App() {
       <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
         {/* Employee Routes */}
         <Route
