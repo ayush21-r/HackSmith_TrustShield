@@ -64,6 +64,8 @@ model Comment {
   author      User      @relation(fields: [authorId], references: [id])
   complaintId Int
   complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  step        String    @default("RECEIVED") // Which workflow step this comment belongs to (RECEIVED, REVIEW, INVESTIGATION, ACTION, CLOSED)
+  stepOrder   Int       @default(1) // Numeric order (1-5) for sorting
   createdAt   DateTime  @default(now())
 }
 

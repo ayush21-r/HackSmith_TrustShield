@@ -1,0 +1,7 @@
+[2026-02-01T08:29:40.965Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T08:29:52.652Z] LOGIN | hr@example.com | HR
+[2026-02-01T08:31:04.721Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T08:31:27.411Z] LOGIN | hr@example.com | HR
+[2026-02-01T08:36:28.810Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T08:37:19.126Z] LOGIN | hr@example.com | HR
+[2026-02-01T08:38:36.179Z] LOGIN | employee@example.com | EMPLOYEE

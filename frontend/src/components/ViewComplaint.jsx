@@ -37,7 +37,8 @@ export default function ViewComplaint() {
 
     setCommenting(true);
     try {
-      await complaintAPI.addComment(id, comment);
+      // Include current step when adding comment
+      await complaintAPI.addComment(id, comment, complaint.status);
       setComment('');
       fetchComplaint();
     } catch (err) {
@@ -56,6 +57,13 @@ export default function ViewComplaint() {
       return;
     }
 
+    // Check if user has typed a comment but not submitted it
+    if (comment.trim()) {
+      alert(`You have an unsaved comment for the ${complaint.status} step. Please click "Add Comment for ${complaint.status} Step" button first, then try moving to the next step.`);
+      setUpdatingStatus(false);
+      return;
+    }
+
     const nextStep = steps[currentIndex + 1];
     setUpdatingStatus(true);
 
@@ -63,7 +71,14 @@ export default function ViewComplaint() {
       await complaintAPI.updateStatus(id, nextStep, `Moved to ${nextStep}`);
       fetchComplaint();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to update status');
+      const errorMessage = err.response?.data?.error || 'Failed to update status';
+      
+      // Show more helpful message if it's about missing comment
+      if (errorMessage.includes('add a comment')) {
+        alert(`${errorMessage}\n\nPlease add at least one comment for the ${complaint.status} step before proceeding.`);
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setUpdatingStatus(false);
     }
@@ -147,12 +162,17 @@ export default function ViewComplaint() {
               <h2 className="text-xl font-bold text-gray-800 mb-3">Internal Comments</h2>
 
               <form onSubmit={handleAddComment} className="mb-4">
+                <div className="mb-2">
+                  <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                    Adding comment for: {complaint.status}
+                  </span>
+                </div>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   rows="3"
-                  placeholder="Add internal notes..."
+                  placeholder={`Add comment for ${complaint.status} step...`}
                   disabled={commenting}
                 />
                 <button
@@ -160,20 +180,64 @@ export default function ViewComplaint() {
                   disabled={commenting || !comment.trim()}
                   className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition disabled:opacity-50"
                 >
-                  {commenting ? 'Adding...' : 'Add Comment'}
+                  {commenting ? 'Adding...' : `Add Comment for ${complaint.status} Step`}
                 </button>
               </form>
 
-              <div className="space-y-3">
+              {/* Group comments by step */}
+              <div className="space-y-4">
                 {complaint.comments && complaint.comments.length > 0 ? (
-                  complaint.comments.map((c) => (
-                    <div key={c.id} className="bg-blue-50 border-l-4 border-blue-600 rounded p-4">
-                      <p className="text-gray-700">{c.content}</p>
-                      <p className="text-gray-500 text-sm mt-2">
-                        {c.author.name} • {new Date(c.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))
+                  (() => {
+                    // Group comments by step
+                    const commentsByStep = {};
+                    const steps = ['RECEIVED', 'REVIEW', 'INVESTIGATION', 'ACTION', 'CLOSED'];
+                    
+                    // Initialize all steps
+                    steps.forEach(step => {
+                      commentsByStep[step] = [];
+                    });
+
+                    // Group comments by their step
+                    complaint.comments.forEach(c => {
+                      const step = c.step || 'RECEIVED'; // Default to RECEIVED if no step
+                      if (commentsByStep[step]) {
+                        commentsByStep[step].push(c);
+                      }
+                    });
+
+                    return steps.map(step => {
+                      const stepComments = commentsByStep[step];
+                      if (!stepComments || stepComments.length === 0) return null;
+
+                      return (
+                        <div key={step} className="border-l-4 border-blue-600 pl-4">
+                          <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                              {
+                                RECEIVED: 'bg-yellow-100 text-yellow-800',
+                                REVIEW: 'bg-blue-100 text-blue-800',
+                                INVESTIGATION: 'bg-purple-100 text-purple-800',
+                                ACTION: 'bg-orange-100 text-orange-800',
+                                CLOSED: 'bg-green-100 text-green-800'
+                              }[step]
+                            }`}>
+                              {step}
+                            </span>
+                          </h3>
+                          <div className="space-y-2">
+                            {stepComments.map((c) => (
+                              <div key={c.id} className="bg-blue-50 rounded p-3">
+                                <p className="text-gray-700">{c.content}</p>
+                                <p className="text-gray-500 text-xs mt-1">
+                                  {c.author?.name || 'Unknown'} • {new Date(c.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }).filter(Boolean); // Remove null entries
+                  })()
                 ) : (
                   <p className="text-gray-600 text-sm">No comments yet</p>
                 )}

@@ -97,6 +97,27 @@ export default function ComplaintStatus() {
           </p>
         </div>
 
+        {/* Current Status Badge */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-3">Current Stage</h2>
+          <div className="flex items-center gap-3">
+            <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+              {
+                RECEIVED: 'bg-yellow-100 text-yellow-800',
+                REVIEW: 'bg-blue-100 text-blue-800',
+                INVESTIGATION: 'bg-purple-100 text-purple-800',
+                ACTION: 'bg-orange-100 text-orange-800',
+                CLOSED: 'bg-green-100 text-green-800'
+              }[complaint.status]
+            }`}>
+              {complaint.status}
+            </span>
+            <span className="text-gray-600">
+              Step {currentStepIndex + 1} of {steps.length}
+            </span>
+          </div>
+        </div>
+
         {/* Workflow Progress */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Status Progress</h2>
@@ -110,7 +131,7 @@ export default function ComplaintStatus() {
                       : 'bg-gray-300 text-gray-600'
                   }`}
                 >
-                  {index + 1}
+                  {index <= currentStepIndex ? '✓' : index + 1}
                 </div>
                 <p className="text-xs text-gray-600 mt-2 text-center">{step}</p>
                 {index < steps.length - 1 && (
@@ -147,20 +168,76 @@ export default function ComplaintStatus() {
           </div>
         )}
 
-        {/* Comments */}
+        {/* HR Comments Grouped by Stage */}
         {complaint.comments && complaint.comments.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">HR Notes</h2>
-            <div className="space-y-3">
-              {complaint.comments.map((comment) => (
-                <div key={comment.id} className="bg-blue-50 border-l-4 border-blue-600 rounded p-4">
-                  <p className="text-gray-700">{comment.content}</p>
-                  <p className="text-gray-500 text-sm mt-2">
-                    {comment.author.name} • {new Date(comment.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
+            <h2 className="text-xl font-bold text-gray-800 mb-4">HR Updates by Stage</h2>
+            <div className="space-y-4">
+              {(() => {
+                // Group comments by workflow step
+                const commentsByStep = {};
+                
+                // Initialize all steps
+                steps.forEach(step => {
+                  commentsByStep[step] = [];
+                });
+
+                // Group comments by their step
+                complaint.comments.forEach(c => {
+                  const step = c.step || 'RECEIVED'; // Default to RECEIVED if no step
+                  if (commentsByStep[step]) {
+                    commentsByStep[step].push(c);
+                  }
+                });
+
+                return steps.map(step => {
+                  const stepComments = commentsByStep[step];
+                  if (!stepComments || stepComments.length === 0) return null;
+
+                  const stepIndex = steps.indexOf(step);
+                  const isCurrentOrPast = stepIndex <= currentStepIndex;
+
+                  return (
+                    <div key={step} className={`border-l-4 pl-4 ${
+                      isCurrentOrPast ? 'border-blue-600' : 'border-gray-300'
+                    }`}>
+                      <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          {
+                            RECEIVED: 'bg-yellow-100 text-yellow-800',
+                            REVIEW: 'bg-blue-100 text-blue-800',
+                            INVESTIGATION: 'bg-purple-100 text-purple-800',
+                            ACTION: 'bg-orange-100 text-orange-800',
+                            CLOSED: 'bg-green-100 text-green-800'
+                          }[step]
+                        }`}>
+                          {step}
+                        </span>
+                        {step === complaint.status && (
+                          <span className="text-xs text-blue-600 font-normal">(Current Stage)</span>
+                        )}
+                      </h3>
+                      <div className="space-y-2">
+                        {stepComments.map((comment) => (
+                          <div key={comment.id} className="bg-blue-50 rounded-lg p-4">
+                            <p className="text-gray-700">{comment.content}</p>
+                            <p className="text-gray-500 text-xs mt-2">
+                              {comment.author?.name || 'HR Staff'} • {new Date(comment.createdAt).toLocaleDateString()} at {new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }).filter(Boolean); // Remove null entries
+              })()}
             </div>
+          </div>
+        )}
+
+        {complaint.comments && complaint.comments.length === 0 && (
+          <div className="mb-8 bg-gray-50 rounded-lg p-6 text-center">
+            <p className="text-gray-600">No HR updates yet. You'll see updates here as your complaint progresses through the workflow.</p>
           </div>
         )}
 

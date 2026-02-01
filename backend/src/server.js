@@ -11,8 +11,38 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
+/**
+ * CORS Configuration for production deployment
+ * Allows requests from:
+ * - Vercel frontend (production)
+ * - localhost (development)
+ */
+const allowedOrigins = [
+  'https://trustshield-frontend.vercel.app', // Your Vercel domain - UPDATE THIS
+  'http://localhost:3000',                     // Local development
+  'http://localhost:3001',                     // Alternative local port
+  process.env.FRONTEND_URL                     // From environment variable if set
+].filter(Boolean); // Remove undefined values
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`❌ CORS blocked request from: ${origin}`);
+      callback(new Error('CORS not allowed for this origin'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static('uploads'));
 

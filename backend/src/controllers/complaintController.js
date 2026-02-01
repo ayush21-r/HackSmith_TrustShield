@@ -64,7 +64,10 @@ export const getComplaint = async (req, res) => {
         files: true,
         comments: {
           include: { author: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: [
+            { stepOrder: 'asc' },
+            { createdAt: 'asc' }
+          ]
         },
         workflow: {
           orderBy: { completedAt: 'asc' }
@@ -138,6 +141,7 @@ export const getMyComplaints = async (req, res) => {
 /**
  * Update complaint status/workflow step (HR only)
  * Enforces linear progression: RECEIVED → REVIEW → INVESTIGATION → ACTION → CLOSED
+ * NEW: Requires at least one comment for current step before moving to next step
  */
 export const updateComplaintStatus = async (req, res) => {
   try {
@@ -161,6 +165,16 @@ export const updateComplaintStatus = async (req, res) => {
     if (nextIndex !== currentIndex + 1) {
       return res.status(400).json({
         error: 'Invalid workflow transition. Must follow: RECEIVED → REVIEW → INVESTIGATION → ACTION → CLOSED'
+      });
+    }
+
+    // NEW: Check if at least one comment exists for the current step
+    const currentStep = complaint.status;
+    const commentExists = await hasCommentForStep(parseInt(id), currentStep);
+    
+    if (!commentExists) {
+      return res.status(400).json({
+        error: `Please add a comment for the ${currentStep} step before proceeding to the next step`
       });
     }
 
@@ -196,21 +210,37 @@ export const updateComplaintStatus = async (req, res) => {
 
 /**
  * Add internal HR comment to complaint
+ * Comments are now tagged with the workflow step they belong to
  */
 export const addComment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { content } = req.body;
+    const { content, step } = req.body;
 
     if (!content) {
       return res.status(400).json({ error: 'Comment content required' });
     }
 
+    if (!step) {
+      return res.status(400).json({ error: 'Workflow step required for comment' });
+    }
+
+    // Map step names to order numbers
+    const stepOrderMap = {
+      'RECEIVED': 1,
+      'REVIEW': 2,
+      'INVESTIGATION': 3,
+      'ACTION': 4,
+      'CLOSED': 5
+    };
+
     const comment = await prisma.comment.create({
       data: {
         content,
         authorId: req.user.id,
-        complaintId: parseInt(id)
+        complaintId: parseInt(id),
+        step: step,
+        stepOrder: stepOrderMap[step] || 1
       },
       include: { author: true }
     });
@@ -220,6 +250,19 @@ export const addComment = async (req, res) => {
     console.error('Add comment error:', error);
     res.status(500).json({ error: 'Failed to add comment' });
   }
+};
+
+/**
+ * Helper function to check if a comment exists for a specific step
+ */
+const hasCommentForStep = async (complaintId, step) => {
+  const count = await prisma.comment.count({
+    where: {
+      complaintId: complaintId,
+      step: step
+    }
+  });
+  return count > 0;
 };
 
 /**

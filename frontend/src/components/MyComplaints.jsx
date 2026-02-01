@@ -99,8 +99,8 @@ export default function MyComplaints() {
             {complaints.map((complaint) => (
               <div
                 key={complaint.id}
-                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 cursor-pointer"
-                onClick={() => navigate(`/status?id=${complaint.id}`)}
+                className="bg-white rounded-lg shadow hover:shadow-xl transition-all p-6 cursor-pointer border-2 border-transparent hover:border-blue-200 relative"
+                onClick={() => navigate(`/complaint/${complaint.id}`)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -135,55 +135,122 @@ export default function MyComplaints() {
                       <span>
                         AI Confidence: {Math.round(complaint.confidenceScore * 100)}%
                       </span>
-                      {complaint.comments.length > 0 && (
+                      {complaint.comments && complaint.comments.length > 0 && (
                         <>
                           <span>•</span>
-                          <span>{complaint.comments.length} HR Comment(s)</span>
+                          <span className="font-semibold text-blue-600">
+                            {complaint.comments.length} HR Comment{complaint.comments.length !== 1 ? 's' : ''}
+                          </span>
                         </>
                       )}
                     </div>
+                    
+                    {/* Stage Information with Comment Preview */}
+                    {complaint.status && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Current Stage:</span>
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(complaint.status)}`}>
+                          {complaint.status}
+                        </span>
+                        {complaint.workflow && complaint.workflow.length > 0 && (
+                          <span className="text-xs text-gray-500">
+                            • Step {complaint.workflow.length} of 5
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="ml-4">
-                    <svg
-                      className="h-6 w-6 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  <div className="ml-4 flex flex-col items-center gap-2">
+                    <button 
+                      className="p-2 bg-blue-50 rounded-full hover:bg-blue-100 transition-colors"
+                      title="View full details and comments"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+                      <svg
+                        className="h-6 w-6 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                    <span className="text-[10px] text-gray-500 font-medium">View Details</span>
                   </div>
                 </div>
 
                 {/* Workflow Progress */}
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between">
                     {['RECEIVED', 'REVIEW', 'INVESTIGATION', 'ACTION', 'CLOSED'].map(
                       (step, index) => {
                         const isCompleted = complaint.workflow.some((w) => w.step === step);
                         const isCurrent = complaint.status === step;
+                        
+                        // Count comments for this specific step
+                        const stepComments = complaint.comments?.filter(c => c.step === step) || [];
+                        const hasComments = stepComments.length > 0;
+                        
+                        // Get short step name
+                        const shortNames = {
+                          'RECEIVED': 'Received',
+                          'REVIEW': 'Review',
+                          'INVESTIGATION': 'Investigation',
+                          'ACTION': 'Action',
+                          'CLOSED': 'Closed'
+                        };
+                        
                         return (
-                          <div key={step} className="flex items-center">
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                isCompleted || isCurrent
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-gray-200 text-gray-500'
-                              }`}
-                            >
-                              {isCompleted ? '✓' : index + 1}
-                            </div>
-                            {index < 4 && (
+                          <div key={step} className="flex flex-col items-center relative group flex-1">
+                            <div className="flex items-center w-full justify-center">
                               <div
-                                className={`w-12 h-1 ${
-                                  isCompleted && !isCurrent ? 'bg-blue-600' : 'bg-gray-200'
-                                }`}
-                              ></div>
+                                className={`w-10 h-10 rounded-full flex items-center justify-center relative transition-all ${
+                                  isCompleted || isCurrent
+                                    ? 'bg-blue-600 text-white shadow-lg'
+                                    : 'bg-gray-200 text-gray-500'
+                                } ${isCurrent ? 'ring-4 ring-blue-200' : ''}`}
+                                title={`${step}${hasComments ? ` - ${stepComments.length} comment(s)` : ''}`}
+                              >
+                                <span className="text-sm font-bold">
+                                  {isCompleted ? '✓' : index + 1}
+                                </span>
+                                {/* Show comment indicator badge */}
+                                {hasComments && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white shadow-md">
+                                    {stepComments.length}
+                                  </div>
+                                )}
+                              </div>
+                              {index < 4 && (
+                                <div
+                                  className={`h-1 flex-1 mx-1 transition-all ${
+                                    isCompleted && !isCurrent ? 'bg-blue-600' : 'bg-gray-200'
+                                  }`}
+                                ></div>
+                              )}
+                            </div>
+                            {/* Step name below circle */}
+                            <div className={`mt-2 text-[11px] font-medium text-center ${
+                              isCurrent ? 'text-blue-600 font-bold' : 
+                              (isCompleted ? 'text-gray-700' : 'text-gray-400')
+                            }`}>
+                              {shortNames[step]}
+                            </div>
+                            {/* Show current indicator */}
+                            {isCurrent && (
+                              <div className="text-[9px] text-blue-600 font-semibold mt-0.5">
+                                Current
+                              </div>
+                            )}
+                            {/* Hover tooltip for comment count */}
+                            {hasComments && (
+                              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                                {stepComments.length} HR comment{stepComments.length !== 1 ? 's' : ''}
+                              </div>
                             )}
                           </div>
                         );

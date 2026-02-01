@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { logAuthEvent } from '../utils/authLogger.js';
 
 const prisma = new PrismaClient();
 
@@ -12,18 +13,23 @@ const DEMO_USERS = {
 /**
  * Login endpoint - returns JWT token
  * For hackathon demo, using hardcoded credentials
+ * LOGS: All successful logins to backend-only auth log
  */
 export const login = (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate input
     if (!email || !password) {
+      console.warn('⚠️  Login attempt missing email or password');
       return res.status(400).json({ error: 'Email and password required' });
     }
 
     const user = DEMO_USERS[email];
 
+    // Check if user exists and password matches
     if (!user || user.password !== password) {
+      console.warn(`⚠️  Failed login attempt for: ${email}`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -34,12 +40,17 @@ export const login = (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // LOG: Record successful login to backend-only auth log
+    logAuthEvent('LOGIN', email, user.role);
+    
+    console.log(`✅ Successful login: ${email} (${user.role})`);
+
     res.json({
       token,
       user: { id: user.id, email, role: user.role, name: user.name }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error.message);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -56,6 +67,7 @@ export const getCurrentUser = (req, res) => {
 
 /**
  * Signup endpoint - creates new user account
+ * LOGS: All successful signups to backend-only auth log
  */
 export const signup = async (req, res) => {
   try {
@@ -99,6 +111,9 @@ export const signup = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    // LOG: Record successful signup to backend-only auth log
+    logAuthEvent('SIGNUP', email, role);
 
     res.status(201).json({
       token,
