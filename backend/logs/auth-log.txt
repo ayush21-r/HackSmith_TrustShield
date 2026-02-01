@@ -6,3 +6,12 @@
 [2026-02-01T08:37:19.126Z] LOGIN | hr@example.com | HR
 [2026-02-01T08:38:36.179Z] LOGIN | employee@example.com | EMPLOYEE
 [2026-02-01T09:01:38.649Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T09:08:14.474Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T09:17:45.082Z] LOGIN | hr@example.com | HR
+[2026-02-01T09:18:26.753Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T13:27:06.310Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T13:37:41.230Z] LOGIN | hr@example.com | HR
+[2026-02-01T13:56:30.337Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T15:10:26.378Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T15:11:02.379Z] LOGIN | employee@example.com | EMPLOYEE
+[2026-02-01T15:11:07.713Z] LOGIN | hr@example.com | HR
