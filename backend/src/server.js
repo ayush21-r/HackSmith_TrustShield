@@ -120,40 +120,50 @@ async function initializeDatabase() {
   try {
     console.log('🔧 Initializing database...');
     
-    // Check if users exist
-    const userCount = await prisma.user.count();
-    
-    if (userCount === 0) {
-      console.log('📝 No users found, seeding database...');
+    // Simple test query to check if tables exist
+    try {
+      const userCount = await prisma.user.count();
+      console.log(`✅ Database tables exist (${userCount} users)`);
       
-      // Create demo users
-      await prisma.user.create({
-        data: {
-          id: 1,
-          email: 'employee@example.com',
-          password: 'password123',
-          name: 'John Doe',
-          role: 'EMPLOYEE'
-        }
-      });
-      
-      await prisma.user.create({
-        data: {
-          id: 2,
-          email: 'hr@example.com',
-          password: 'password123',
-          name: 'Jane Smith',
-          role: 'HR'
-        }
-      });
-      
-      console.log('✅ Database seeded with demo users');
-    } else {
-      console.log(`✅ Database ready (${userCount} users found)`);
+      if (userCount === 0) {
+        console.log('📝 No users found, creating demo users...');
+        
+        // Create demo users
+        await prisma.user.create({
+          data: {
+            id: 1,
+            email: 'employee@example.com',
+            password: 'password123',
+            name: 'John Doe',
+            role: 'EMPLOYEE'
+          }
+        });
+        
+        await prisma.user.create({
+          data: {
+            id: 2,
+            email: 'hr@example.com',
+            password: 'password123',
+            name: 'Jane Smith',
+            role: 'HR'
+          }
+        });
+        
+        console.log('✅ Demo users created');
+      }
+    } catch (tableError) {
+      console.log('❌ Database tables do not exist. Creating schema...');
+      console.log('   Error:', tableError.message);
+      console.log('   This is normal on first deployment.');
+      console.log('   Render will handle Prisma migrations automatically.');
+      throw tableError;
     }
   } catch (error) {
-    console.error('⚠️ Database initialization warning:', error.message);
-    // Don't fail startup, the app can still work
+    console.error('⚠️ Database initialization error:', error.message);
+    console.error('   This typically means:');
+    console.error('   1. DATABASE_URL is not set in Render environment');
+    console.error('   2. PostgreSQL database is not accessible');
+    console.error('   3. Schema hasn\'t been created yet');
   }
 }
 
