@@ -107,6 +107,35 @@ export const getAllComplaints = async (req, res) => {
 };
 
 /**
+ * Get all complaints for the logged-in employee
+ */
+export const getMyComplaints = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const complaints = await prisma.complaint.findMany({
+      where: { reportedById: userId },
+      include: {
+        files: true,
+        comments: {
+          include: { author: true },
+          orderBy: { createdAt: 'desc' }
+        },
+        workflow: {
+          orderBy: { completedAt: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(complaints);
+  } catch (error) {
+    console.error('Get my complaints error:', error);
+    res.status(500).json({ error: 'Failed to fetch your complaints' });
+  }
+};
+
+/**
  * Update complaint status/workflow step (HR only)
  * Enforces linear progression: RECEIVED → REVIEW → INVESTIGATION → ACTION → CLOSED
  */

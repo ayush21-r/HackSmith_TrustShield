@@ -41,14 +41,13 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-3 gap-6 mb-8">
         {/* Submit Report Card */}
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-8 border border-blue-200">
           <div className="text-4xl mb-4">📝</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-3">Report a Concern</h2>
           <p className="text-gray-700 mb-6">
             Submit a report about workplace harassment or discrimination. You can report anonymously or with your name.
-            All reports are handled confidentially.
           </p>
           <Link
             to="/report"
@@ -64,9 +63,23 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-gray-800 mb-3">Check Status</h2>
           <p className="text-gray-700 mb-6">
             Enter your complaint ID to view the current status and progress of your report.
-            You'll see internal HR notes and workflow updates.
           </p>
           <CheckStatusForm />
+        </div>
+
+        {/* My Complaints Card */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-8 border border-purple-200">
+          <div className="text-4xl mb-4">📋</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">My Complaints</h2>
+          <p className="text-gray-700 mb-6">
+            View all your submitted complaints with IDs and status updates in one place.
+          </p>
+          <Link
+            to="/my-complaints"
+            className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition"
+          >
+            View History →
+          </Link>
         </div>
       </div>
 

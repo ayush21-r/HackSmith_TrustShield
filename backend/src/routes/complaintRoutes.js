@@ -4,6 +4,7 @@ import {
   submitComplaint,
   getComplaint,
   getAllComplaints,
+  getMyComplaints,
   updateComplaintStatus,
   addComment,
   uploadFile
@@ -40,6 +41,12 @@ router.get('/:id', getComplaint);
  * Get all complaints (HR only)
  */
 router.get('/', requireAuth, requireHR, getAllComplaints);
+
+/**
+ * GET /api/complaints/my/history
+ * Get all complaints for logged-in employee
+ */
+router.get('/my/history', requireAuth, getMyComplaints);
 
 /**
  * PATCH /api/complaints/:id/status

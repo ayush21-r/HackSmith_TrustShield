@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Home from './pages/Home';
 import ReportComplaint from './components/ReportComplaint';
 import ComplaintStatus from './components/ComplaintStatus';
+import MyComplaints from './components/MyComplaints';
 import HRDashboard from './components/HRDashboard';
 import ViewComplaint from './components/ViewComplaint';
 import './index.css';
@@ -80,6 +81,17 @@ export default function App() {
             <ProtectedRoute>
               <Layout>
                 <ComplaintStatus />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-complaints"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MyComplaints />
               </Layout>
             </ProtectedRoute>
           }
