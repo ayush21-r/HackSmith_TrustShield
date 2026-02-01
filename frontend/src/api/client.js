@@ -2,11 +2,16 @@ import axios from 'axios';
 
 /**
  * API Base URL - uses environment variable for deployment
- * Local: /api (proxied to localhost:5000)
- * Production: Full URL from VITE_API_URL (e.g., https://hacksmith-trustshield.onrender.com)
+ * Local: http://localhost:5000/api (proxied via Vite)
+ * Production: https://hacksmith-trustshield.onrender.com/api
+ * 
+ * IMPORTANT: VITE_API_URL should NOT include /api
+ * The client.js will append /api automatically
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = `${BACKEND_URL}/api`;
 
+console.log('🔗 Backend URL:', BACKEND_URL);
 console.log('🔗 API Base URL:', API_BASE_URL);
 
 // Create axios instance
@@ -44,6 +49,7 @@ api.interceptors.response.use(
     // If it's a network error, log that specifically
     if (!error.response) {
       console.error('❌ Network Error - Cannot reach API at:', API_BASE_URL);
+      console.error('❌ Make sure VITE_API_URL is set correctly in environment variables');
     }
     
     return Promise.reject(error);
