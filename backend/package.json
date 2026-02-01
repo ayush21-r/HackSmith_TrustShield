@@ -1,6 +1,6 @@
 {
   "name": "trustshield-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TrustShield - AI-powered workplace harassment reporting platform",
   "main": "src/server.js",
   "type": "module",
