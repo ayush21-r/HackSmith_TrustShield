@@ -9,10 +9,38 @@ const prisma = new PrismaClient();
 export const submitComplaint = async (req, res) => {
   try {
     const { title, description, isAnonymous } = req.body;
-    const userId = req.user?.id || 1; // Default to employee 1 if anonymous
+    let userId = req.user?.id;
 
     if (!title || !description) {
       return res.status(400).json({ error: 'Title and description required' });
+    }
+
+    // If no user (anonymous), create or use default system user
+    if (!userId) {
+      let systemUser = await prisma.user.findFirst({
+        where: { email: 'system@trustshield.local' }
+      });
+      
+      if (!systemUser) {
+        systemUser = await prisma.user.create({
+          data: {
+            email: 'system@trustshield.local',
+            password: 'system',
+            name: 'System User',
+            role: 'SYSTEM'
+          }
+        });
+      }
+      userId = systemUser.id;
+    } else {
+      // Verify the user exists
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+      
+      if (!userExists) {
+        return res.status(400).json({ error: 'User account not found. Please ensure your account is properly set up.' });
+      }
     }
 
     // Mock AI confidence score (0-1)
