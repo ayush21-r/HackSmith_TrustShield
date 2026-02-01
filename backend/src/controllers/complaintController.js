@@ -50,8 +50,12 @@ export const submitComplaint = async (req, res) => {
 
     res.status(201).json(complaint);
   } catch (error) {
-    console.error('Submit complaint error:', error);
-    res.status(500).json({ error: 'Failed to submit complaint' });
+    console.error('❌ Submit complaint error:');
+    console.error('   Message:', error.message);
+    console.error('   Code:', error.code);
+    console.error('   Meta:', error.meta);
+    console.error('   Stack:', error.stack);
+    res.status(500).json({ error: 'Failed to submit complaint', details: error.message });
   }
 };
 
@@ -86,8 +90,10 @@ export const getComplaint = async (req, res) => {
 
     res.json(complaint);
   } catch (error) {
-    console.error('Get complaint error:', error);
-    res.status(500).json({ error: 'Failed to fetch complaint' });
+    console.error('❌ Get complaint error:');
+    console.error('   Message:', error.message);
+    console.error('   Stack:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch complaint', details: error.message });
   }
 };
 
@@ -108,8 +114,10 @@ export const getAllComplaints = async (req, res) => {
 
     res.json(complaints);
   } catch (error) {
-    console.error('Get all complaints error:', error);
-    res.status(500).json({ error: 'Failed to fetch complaints' });
+    console.error('❌ Get all complaints error:');
+    console.error('   Message:', error.message);
+    console.error('   Stack:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch complaints', details: error.message });
   }
 };
 
@@ -137,8 +145,10 @@ export const getMyComplaints = async (req, res) => {
 
     res.json(complaints);
   } catch (error) {
-    console.error('Get my complaints error:', error);
-    res.status(500).json({ error: 'Failed to fetch your complaints' });
+    console.error('❌ Get my complaints error:');
+    console.error('   Message:', error.message);
+    console.error('   Stack:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch your complaints', details: error.message });
   }
 };
 
