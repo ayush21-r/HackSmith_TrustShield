@@ -30,37 +30,61 @@ const PORT = process.env.PORT || 5000;
 
 /**
  * CORS Configuration for production deployment
- * Allows requests from:
- * - Vercel frontend (production)
- * - localhost (development)
+ * Dynamically builds allowed origins from environment and hardcoded values
  */
 const allowedOrigins = [
-  'https://trustshield-frontend.vercel.app', // Your Vercel domain - UPDATE THIS
-  'http://localhost:3000',                     // Local development
-  'http://localhost:3001',                     // Alternative local port
-  process.env.FRONTEND_URL                     // From environment variable if set
-].filter(Boolean); // Remove undefined values
+  // Hardcoded for local development
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  
+  // Default Vercel domain pattern
+  'https://trustshield-frontend.vercel.app',
+  
+  // Add from environment variable if set
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  
+  // Support multiple Vercel preview deployments
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  
+  // Wildcard for Vercel preview deployments (*.vercel.app)
+  // Note: Will be checked with regex below
+].filter(Boolean);
 
 /**
  * SECURITY: CORS configuration
- * Prevents unauthorized frontend origins from accessing backend
- * DATABASE_URL and JWT_SECRET are never exposed to frontend
+ * - Prevents unauthorized frontend origins from accessing backend
+ * - DATABASE_URL and JWT_SECRET are never exposed to frontend
+ * - Supports local development, production Vercel, and preview deployments
  */
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ CORS blocked request from: ${origin}`);
-      callback(new Error('CORS not allowed for this origin'));
+    // Allow requests with no origin (curl, mobile apps, server-to-server)
+    if (!origin) {
+      return callback(null, true);
     }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Check for Vercel preview deployments (*.vercel.app pattern)
+    if (origin.includes('.vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Origin not allowed
+    console.warn(`⚠️ CORS blocked request from: ${origin}`);
+    console.warn(`📝 Allowed origins: ${allowedOrigins.join(', ')}`);
+    return callback(new Error('CORS not allowed for this origin'));
   },
-  credentials: true,
+  credentials: false,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length', 'X-JSON-Response'],
+  optionsSuccessStatus: 200 // For legacy browsers
 };
 
 // Middleware
