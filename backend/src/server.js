@@ -101,13 +101,61 @@ app.get('/health', (req, res) => {
   res.json({ status: 'TrustShield backend is running' });
 });
 
+// Initialize database (run migrations and seed if needed)
+async function initializeDatabase() {
+  try {
+    console.log('🔧 Initializing database...');
+    
+    // Check if users exist
+    const userCount = await prisma.user.count();
+    
+    if (userCount === 0) {
+      console.log('📝 No users found, seeding database...');
+      
+      // Create demo users
+      await prisma.user.create({
+        data: {
+          id: 1,
+          email: 'employee@example.com',
+          password: 'password123',
+          name: 'John Doe',
+          role: 'EMPLOYEE'
+        }
+      });
+      
+      await prisma.user.create({
+        data: {
+          id: 2,
+          email: 'hr@example.com',
+          password: 'password123',
+          name: 'Jane Smith',
+          role: 'HR'
+        }
+      });
+      
+      console.log('✅ Database seeded with demo users');
+    } else {
+      console.log(`✅ Database ready (${userCount} users found)`);
+    }
+  } catch (error) {
+    console.error('⚠️ Database initialization warning:', error.message);
+    // Don't fail startup, the app can still work
+  }
+}
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`🛡️  TrustShield backend running on port ${PORT}`);
-  console.log(`📋 Demo credentials:`);
-  console.log(`   Employee: employee@example.com / password123`);
-  console.log(`   HR: hr@example.com / password123`);
-});
+async function start() {
+  await initializeDatabase();
+  
+  app.listen(PORT, () => {
+    console.log(`🛡️  TrustShield backend running on port ${PORT}`);
+    console.log(`📋 Demo credentials:`);
+    console.log(`   Employee: employee@example.com / password123`);
+    console.log(`   HR: hr@example.com / password123`);
+  });
+}
+
+start();
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
