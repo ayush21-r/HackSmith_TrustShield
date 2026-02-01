@@ -29,9 +29,13 @@ export const submitComplaint = async (req, res) => {
         currentStep: 1
       },
       include: {
-        reportedBy: !isAnonymous,
+        reportedBy: true,
         files: true,
-        comments: true
+        comments: {
+          include: {
+            author: true
+          }
+        }
       }
     });
 
