@@ -97,8 +97,22 @@ app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'TrustShield backend is running' });
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    const userCount = await prisma.user.count();
+    res.json({ 
+      status: 'TrustShield backend is running',
+      database: 'connected',
+      users: userCount
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'TrustShield backend is running',
+      database: 'disconnected',
+      error: error.message
+    });
+  }
 });
 
 // Initialize database (run migrations and seed if needed)

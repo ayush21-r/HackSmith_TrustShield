@@ -11,17 +11,25 @@ export const submitComplaint = async (req, res) => {
     const { title, description, isAnonymous } = req.body;
     let userId = req.user?.id;
 
+    console.log('📝 Complaint submission received:');
+    console.log('   Title:', title);
+    console.log('   Description:', description ? description.substring(0, 50) + '...' : 'EMPTY');
+    console.log('   Anonymous:', isAnonymous);
+    console.log('   User ID:', userId);
+
     if (!title || !description) {
       return res.status(400).json({ error: 'Title and description required' });
     }
 
     // If no user (anonymous), create or use default system user
     if (!userId) {
+      console.log('🔍 No user ID, looking for system user...');
       let systemUser = await prisma.user.findFirst({
         where: { email: 'system@trustshield.local' }
       });
       
       if (!systemUser) {
+        console.log('❌ System user not found, creating...');
         systemUser = await prisma.user.create({
           data: {
             email: 'system@trustshield.local',
@@ -30,22 +38,29 @@ export const submitComplaint = async (req, res) => {
             role: 'SYSTEM'
           }
         });
+        console.log('✅ System user created with ID:', systemUser.id);
+      } else {
+        console.log('✅ System user found with ID:', systemUser.id);
       }
       userId = systemUser.id;
     } else {
       // Verify the user exists
+      console.log('🔍 Verifying user exists with ID:', userId);
       const userExists = await prisma.user.findUnique({
         where: { id: userId }
       });
       
       if (!userExists) {
+        console.log('❌ User ID', userId, 'not found in database');
         return res.status(400).json({ error: 'User account not found. Please ensure your account is properly set up.' });
       }
+      console.log('✅ User found:', userExists.email);
     }
 
     // Mock AI confidence score (0-1)
     const confidenceScore = Math.random();
 
+    console.log('💾 Creating complaint with reportedById:', userId);
     const complaint = await prisma.complaint.create({
       data: {
         title,
@@ -67,6 +82,8 @@ export const submitComplaint = async (req, res) => {
       }
     });
 
+    console.log('✅ Complaint created with ID:', complaint.id);
+
     // Add initial workflow step
     await prisma.workflowStep.create({
       data: {
@@ -75,6 +92,8 @@ export const submitComplaint = async (req, res) => {
         notes: 'Complaint received'
       }
     });
+
+    console.log('✅ Workflow step created');
 
     res.status(201).json(complaint);
   } catch (error) {
