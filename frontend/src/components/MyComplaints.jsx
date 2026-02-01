@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { complaintAPI } from '../api/client';
+import apiClient from '../api/client';
 
 export default function MyComplaints() {
   const [complaints, setComplaints] = useState([]);
@@ -15,7 +15,7 @@ export default function MyComplaints() {
   const fetchMyComplaints = async () => {
     try {
       setLoading(true);
-      const response = await complaintAPI.getMyComplaints();
+      const response = await apiClient.get('/complaints/my/history');
       setComplaints(response.data);
     } catch (err) {
       setError('Failed to load your complaints');
