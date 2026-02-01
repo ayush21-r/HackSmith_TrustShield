@@ -13,6 +13,8 @@ export default function ReportComplaint() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  
+  const MAX_DESCRIPTION_LENGTH = 1000;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,15 +70,28 @@ export default function ReportComplaint() {
         </div>
 
         <div>
-          <label className="block text-gray-700 font-medium mb-2">Description *</label>
+          <label className="block text-gray-700 font-medium mb-2">
+            Description *
+            <span className="text-sm text-gray-500 ml-2">
+              ({description.length}/{MAX_DESCRIPTION_LENGTH} characters)
+            </span>
+          </label>
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= MAX_DESCRIPTION_LENGTH) {
+                setDescription(e.target.value);
+              }
+            }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             rows="6"
             placeholder="Provide detailed information about your concern (dates, times, witnesses, etc.)"
+            maxLength={MAX_DESCRIPTION_LENGTH}
             required
           />
+          {description.length >= MAX_DESCRIPTION_LENGTH && (
+            <p className="text-sm text-red-600 mt-1">Maximum character limit reached</p>
+          )}
         </div>
 
         <div className="flex items-center space-x-3">
